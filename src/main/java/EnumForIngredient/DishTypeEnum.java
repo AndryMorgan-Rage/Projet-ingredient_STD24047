@@ -1,6 +1,6 @@
 package EnumForIngredient;
 
-public enum dish_type {
+public enum DishTypeEnum {
     STAR,
     MAIN,
     DESSERT

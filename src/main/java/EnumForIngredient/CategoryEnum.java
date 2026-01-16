@@ -1,6 +1,6 @@
 package EnumForIngredient;
 
-public enum category {
+public enum CategoryEnum {
         VEGETABLE,
         ANIMAL,
         MARINE,
