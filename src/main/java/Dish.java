@@ -15,6 +15,8 @@ public class Dish {
         this.ingredient = ingredient;
     }
 
+
+
     @Override
     public String toString() {
         return "Dish{" +
@@ -56,4 +58,6 @@ public class Dish {
     public void setIngredient(List<Ingredient> ingredient) {
         this.ingredient = ingredient;
     }
+
+
 }

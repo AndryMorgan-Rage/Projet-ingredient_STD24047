@@ -7,6 +7,7 @@ public class Ingredient {
     private CategoryEnum category;
     private Dish dish;
 
+
     public int getId() {
         return id;
     }
