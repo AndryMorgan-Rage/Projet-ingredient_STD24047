@@ -1,21 +1,27 @@
-CREATE TYPE CategoryEnum AS ENUM (
-  'VEGETABLE','ANIMAL','MARINE','DAIRY','OTHER'
-);
-CREATE TYPE DishTypeEnum AS ENUM (
-    'STAR','MAIN','DESSERT'
+create type dish_type as enum ('STARTER', 'MAIN', 'DESSERT');
+
+
+create table dish
+(
+    id        serial primary key,
+    name      varchar(255),
+    dish_type dish_type
 );
 
-create table Ingredient (
-    id SERIAL primary key,
-    name VARCAHR(255),
-    price NUMERIC,
-    category CategoryEnum not null ,
-    id_dish int not null ,
-    CONSTRAINT fk_dish foreign key (id_dish) references Dish (id)
+create type ingredient_category as enum ('VEGETABLE', 'ANIMAL', 'MARINE', 'DAIRY', 'OTHER');
 
-)
-create table Dish (
-      id  SERIAL primary key,
-      name varchar (255),
-      dish_type DishTypeEnum not null
-)
+create table ingredient
+(
+    id       serial primary key,
+    name     varchar(255),
+    price    numeric(10, 2),
+    category ingredient_category,
+    id_dish  int references dish (id)
+);
+
+alter table dish
+    add column if not exists price numeric(10, 2);
+
+
+alter table ingredient
+    add column if not exists required_quantity numeric(10, 2);
