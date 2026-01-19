@@ -9,7 +9,7 @@ public class DBConnection {
             String jdbcURl = System.getenv("JDBC_URl");
             String user = System.getenv("USER");
             String password = System.getenv("PASSWORD");
-            return DriverManager.getConnection("jdbc:postgresql://localhost:5432/mini_dish_db", "postgres", "postgres");
+            return DriverManager.getConnection("jdbc:postgresql://localhost:5432/mini_dish_db", "postgres", "morgan 47");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
