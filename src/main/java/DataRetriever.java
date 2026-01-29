@@ -416,7 +416,6 @@ public class DataRetriever {
     }
 
     private void updateSequenceNextValue(Connection conn, String tableName, String columnName, String sequenceName) throws SQLException {
-        // Correction : On utilise 1 au lieu de 0 pour éviter l'erreur "out of bounds"
         String setValSql = String.format(
                 "SELECT setval('%s', (SELECT COALESCE(MAX(%s), 1) FROM %s))",
                 sequenceName, columnName, tableName
@@ -429,7 +428,7 @@ public class DataRetriever {
     public Order saveOrder(Order orderToSave) {
         if (orderToSave == null) throw new RuntimeException("Order is null");
 
-        // 1. QUESTION 2 : Blocage si la commande est déjà livrée
+        //  Blocage si la commande est déjà livrée
         if (orderToSave.getId() != null) {
             Order existingOrder = findOrderByReference(orderToSave.getReference());
             if (OrderStatusEnum.DELIVERED.equals(existingOrder.getStatus())) {
@@ -440,7 +439,7 @@ public class DataRetriever {
         try (Connection conn = new DBConnection().getConnection()) {
             conn.setAutoCommit(false);
 
-            // 2. VÉRIFICATION DES STOCKS (Comportement initial préservé)
+            // VÉRIFICATION DES STOCKS (Comportement initial préservé)
             for (DishOrder dishOrder : orderToSave.getDishOrderList()) {
                 Dish dish = findDishById(dishOrder.getDish().getId());
                 for (DishIngredient di : dish.getDishIngredients()) {
@@ -459,7 +458,7 @@ public class DataRetriever {
                 }
             }
 
-            // 3. QUESTION 1 : Enregistrement de la commande (Type et Statut)
+            // Enregistrement de la commande (Type et Statut)
             String upsertOrderSql = """
             INSERT INTO "order" (id, reference, creation_datetime, type, status) 
             VALUES (?, ?, ?, ?::order_type, ?::order_status)
@@ -482,7 +481,7 @@ public class DataRetriever {
                 }
             }
 
-            // 4. NETTOYAGE : Supprimer les anciens plats si c'est une modification
+            //  NETTOYAGE : Supprimer les anciens plats si c'est une modification
             if (orderToSave.getId() != null) {
                 try (PreparedStatement psDel = conn.prepareStatement("DELETE FROM dish_order WHERE id_order = ?")) {
                     psDel.setInt(1, orderId);

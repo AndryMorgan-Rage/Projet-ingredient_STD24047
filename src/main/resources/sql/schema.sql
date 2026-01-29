@@ -77,10 +77,8 @@ create table if not exists dish_order
     id_dish  int references dish (id),
     quantity int
 );
--- Création des types ENUM
 CREATE TYPE order_type AS ENUM ('EAT_IN', 'TAKE_AWAY');
 CREATE TYPE order_status AS ENUM ('CREATED', 'READY', 'DELIVERED');
 
--- Ajout des colonnes à la table "order"
 ALTER TABLE "order" ADD COLUMN type order_type NOT NULL DEFAULT 'EAT_IN';
 ALTER TABLE "order" ADD COLUMN status order_status NOT NULL DEFAULT 'CREATED';

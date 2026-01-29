@@ -27,31 +27,31 @@ public class Main {
 
                 DataRetriever retriever = new DataRetriever();
 
-                // 1. Création d'une nouvelle commande (CREATED / EAT_IN)
+                // (CREATED / EAT_IN)
                 Order newOrder = new Order();
                 newOrder.setReference("CMD-TEST-001");
                 newOrder.setCreationDatetime(Instant.now());
                 newOrder.setType(OrderTypeEnum.EAT_IN);
                 newOrder.setStatus(OrderStatusEnum.CREATED);
-                newOrder.setDishOrderList(new ArrayList<>()); // Ajoute des plats si nécessaire
+                newOrder.setDishOrderList(new ArrayList<>());
 
                 System.out.println("--- Test 1 : Sauvegarde initiale ---");
                 retriever.saveOrder(newOrder);
                 System.out.println("Commande sauvegardée avec succès !");
 
-                // 2. Test du findOrderByReference
+                //  Test du findOrderByReference
                 System.out.println("\n--- Test 2 : Récupération ---");
                 Order found = retriever.findOrderByReference("CMD-TEST-001");
                 System.out.println("Type récupéré : " + found.getType());
                 System.out.println("Statut récupéré : " + found.getStatus());
 
-                // 3. Mise à jour en DELIVERED
+                //  Mise à jour en DELIVERED
                 System.out.println("\n--- Test 3 : Passage en DELIVERED ---");
                 found.setStatus(OrderStatusEnum.DELIVERED);
                 retriever.saveOrder(found);
                 System.out.println("Commande marquée comme LIVRÉE.");
 
-                // 4. Tentative de modification interdite (Question 2 du sujet)
+                // Tentative de modification interdite
                 System.out.println("\n--- Test 4 : Tentative de modification d'une commande livrée ---");
                 try {
                     found.setType(OrderTypeEnum.TAKE_AWAY); // On essaie de changer le type
