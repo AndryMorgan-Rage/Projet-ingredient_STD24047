@@ -489,7 +489,7 @@ public class DataRetriever {
                 }
             }
 
-            // 5. INSERTION DES PLATS (DISH_ORDER)
+            // INSERTION DES PLATS (DISH_ORDER)
             String insertDishOrderSql = "INSERT INTO dish_order (id, id_order, id_dish, quantity) VALUES (?, ?, ?, ?)";
             try (PreparedStatement psDishOrder = conn.prepareStatement(insertDishOrderSql)) {
                 for (DishOrder dishOrder : orderToSave.getDishOrderList()) {
