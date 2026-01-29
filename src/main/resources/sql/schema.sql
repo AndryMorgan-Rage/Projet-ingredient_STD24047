@@ -82,3 +82,9 @@ CREATE TYPE order_status AS ENUM ('CREATED', 'READY', 'DELIVERED');
 
 ALTER TABLE "order" ADD COLUMN type order_type NOT NULL DEFAULT 'EAT_IN';
 ALTER TABLE "order" ADD COLUMN status order_status NOT NULL DEFAULT 'CREATED';
+
+
+
+insert into "order" (id , reference , status , type , creation_datetime)
+    values (1,'ORD 101','DELIVERED','TAKE_AWAY','2026-01-29'),
+            (2,'ORD 102','CREATED','EAT_IN','2026-01-29');

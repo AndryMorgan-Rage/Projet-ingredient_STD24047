@@ -3,65 +3,15 @@ import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
-      //  DataRetriever dataRetriever = new DataRetriever();
-       // Dish saladeVerte = dataRetriever.findDishById(1);
-       // System.out.println(saladeVerte);
 
-      //  Dish poulet = dataRetriever.findDishById(2);
-      //  System.out.println(poulet);
+        DataRetriever dataRetriever = new DataRetriever();
+        Order ord = dataRetriever.findOrderByReference("ORD 102");
+        ord.setType(OrderTypeEnum.valueOf("TAKE_AWAY"));
+        ord.setStatus(OrderStatusEnum.DELIVERED);
+        dataRetriever.saveOrder(ord);
 
-       // Dish rizLegume = dataRetriever.findDishById(3);
-    //    rizLegume.setPrice(100.0);
-    //    Dish newRizLegume = dataRetriever.saveDish(rizLegume);
-    //    System.out.println(newRizLegume); // Should not throw exception
-
-
-//        Dish rizLegumeAgain = dataRetriever.findDishById(3);
-//        rizLegumeAgain.setPrice(null);
-//        Dish savedNewRizLegume = dataRetriever.saveDish(rizLegume);
-//        System.out.println(savedNewRizLegume); // Should throw exception
-
-    //    Ingredient laitue = dataRetriever.findIngredientById(1);
-      //  System.out.println(laitue);
-
-
-                DataRetriever retriever = new DataRetriever();
-
-                // (CREATED / EAT_IN)
-                Order newOrder = new Order();
-                newOrder.setReference("CMD-TEST-001");
-                newOrder.setCreationDatetime(Instant.now());
-                newOrder.setType(OrderTypeEnum.EAT_IN);
-                newOrder.setStatus(OrderStatusEnum.CREATED);
-                newOrder.setDishOrderList(new ArrayList<>());
-
-                System.out.println("--- Test 1 : Sauvegarde initiale ---");
-                retriever.saveOrder(newOrder);
-                System.out.println("Commande sauvegardée avec succès !");
-
-                //  Test du findOrderByReference
-                System.out.println("\n--- Test 2 : Récupération ---");
-                Order found = retriever.findOrderByReference("CMD-TEST-001");
-                System.out.println("Type récupéré : " + found.getType());
-                System.out.println("Statut récupéré : " + found.getStatus());
-
-                //  Mise à jour en DELIVERED
-                System.out.println("\n--- Test 3 : Passage en DELIVERED ---");
-                found.setStatus(OrderStatusEnum.DELIVERED);
-                retriever.saveOrder(found);
-                System.out.println("Commande marquée comme LIVRÉE.");
-
-                // Tentative de modification interdite
-                System.out.println("\n--- Test 4 : Tentative de modification d'une commande livrée ---");
-                try {
-                    found.setType(OrderTypeEnum.TAKE_AWAY); // On essaie de changer le type
-                    retriever.saveOrder(found);
-                    System.out.println("ERREUR : La modification aurait dû être bloquée !");
-                } catch (RuntimeException e) {
-                    System.out.println("SUCCÈS : L'exception a bien été levée : " + e.getMessage());
-                }
-            }
-        }
+    }
+}
 
 
 
