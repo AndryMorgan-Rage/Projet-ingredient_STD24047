@@ -7,6 +7,14 @@ public class Order {
     private String reference;
     private Instant creationDatetime;
     private List<DishOrder> dishOrderList;
+    private OrderTypeEnum type;
+    private OrderStatusEnum status;
+
+    public OrderTypeEnum getType() { return type; }
+    public void setType(OrderTypeEnum type) { this.type = type; }
+
+    public OrderStatusEnum getStatus() { return status; }
+    public void setStatus(OrderStatusEnum status) { this.status = status; }
 
     public Integer getId() {
         return id;

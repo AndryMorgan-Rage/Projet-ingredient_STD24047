@@ -1,3 +1,4 @@
+
 insert into dish (id, name, dish_type, selling_price)
 values (1, 'Salaide fraîche', 'STARTER', 3500.0),
        (2, 'Poulet grillé', 'MAIN', 12000.0),

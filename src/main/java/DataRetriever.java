@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,8 @@ public class DataRetriever {
         DBConnection dbConnection = new DBConnection();
         try (Connection connection = dbConnection.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement("""
-                    select id, reference, creation_datetime from "order" where reference like ?""");
+                    select id, reference, creation_datetime, type, status
+                                    from "order" where reference = ?""");
             preparedStatement.setString(1, reference);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
@@ -19,6 +21,8 @@ public class DataRetriever {
                 order.setId(idOrder);
                 order.setReference(resultSet.getString("reference"));
                 order.setCreationDatetime(resultSet.getTimestamp("creation_datetime").toInstant());
+                order.setType(OrderTypeEnum.valueOf(resultSet.getString("type")));
+                order.setStatus(OrderStatusEnum.valueOf(resultSet.getString("status")));
                 order.setDishOrderList(findDishOrderByIdOrder(idOrder));
                 return order;
             }
@@ -419,6 +423,91 @@ public class DataRetriever {
 
         try (PreparedStatement ps = conn.prepareStatement(setValSql)) {
             ps.executeQuery();
+        }
+    }
+    public Order saveOrder(Order orderToSave) {
+        if (orderToSave == null) throw new RuntimeException("Order is null");
+
+        // 1. QUESTION 2 : Blocage si la commande est déjà livrée
+        if (orderToSave.getId() != null) {
+            Order existingOrder = findOrderByReference(orderToSave.getReference());
+            if (OrderStatusEnum.DELIVERED.equals(existingOrder.getStatus())) {
+                throw new RuntimeException("Une commande livrée ne peut plus être modifiée.");
+            }
+        }
+
+        try (Connection conn = new DBConnection().getConnection()) {
+            conn.setAutoCommit(false);
+
+            // 2. VÉRIFICATION DES STOCKS (Comportement initial préservé)
+            for (DishOrder dishOrder : orderToSave.getDishOrderList()) {
+                Dish dish = findDishById(dishOrder.getDish().getId());
+                for (DishIngredient di : dish.getDishIngredients()) {
+                    double quantityNeeded = di.getQuantity() * dishOrder.getQuantity();
+                    Ingredient ingredient = di.getIngredient();
+                    StockValue currentStock = ingredient.getStockValueAt(Instant.now());
+
+                    double stockQuantityConverted = (currentStock.getUnit() != di.getUnit())
+                            ? UnitConverter.convert(ingredient.getName(), currentStock.getQuantity(), currentStock.getUnit(), di.getUnit())
+                            : currentStock.getQuantity();
+
+                    if (stockQuantityConverted < quantityNeeded) {
+                        conn.rollback();
+                        throw new RuntimeException("Stock insuffisant : " + ingredient.getName());
+                    }
+                }
+            }
+
+            // 3. QUESTION 1 : Enregistrement de la commande (Type et Statut)
+            String upsertOrderSql = """
+            INSERT INTO "order" (id, reference, creation_datetime, type, status) 
+            VALUES (?, ?, ?, ?::order_type, ?::order_status)
+            ON CONFLICT (id) DO UPDATE SET 
+                status = EXCLUDED.status,
+                type = EXCLUDED.type
+            RETURNING id
+        """;
+
+            Integer orderId = (orderToSave.getId() != null) ? orderToSave.getId() : getNextSerialValue(conn, "order", "id");
+
+            try (PreparedStatement psOrder = conn.prepareStatement(upsertOrderSql)) {
+                psOrder.setInt(1, orderId);
+                psOrder.setString(2, orderToSave.getReference());
+                psOrder.setTimestamp(3, Timestamp.from(orderToSave.getCreationDatetime()));
+                psOrder.setString(4, orderToSave.getType().name());   // EAT_IN ou TAKE_AWAY
+                psOrder.setString(5, orderToSave.getStatus().name()); // CREATED, READY ou DELIVERED
+
+                try (ResultSet rs = psOrder.executeQuery()) {
+                    if (rs.next()) orderToSave.setId(rs.getInt(1));
+                }
+            }
+
+            // 4. NETTOYAGE : Supprimer les anciens plats si c'est une modification
+            if (orderToSave.getId() != null) {
+                try (PreparedStatement psDel = conn.prepareStatement("DELETE FROM dish_order WHERE id_order = ?")) {
+                    psDel.setInt(1, orderId);
+                    psDel.executeUpdate();
+                }
+            }
+
+            // 5. INSERTION DES PLATS (DISH_ORDER)
+            String insertDishOrderSql = "INSERT INTO dish_order (id, id_order, id_dish, quantity) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement psDishOrder = conn.prepareStatement(insertDishOrderSql)) {
+                for (DishOrder dishOrder : orderToSave.getDishOrderList()) {
+                    psDishOrder.setInt(1, getNextSerialValue(conn, "dish_order", "id"));
+                    psDishOrder.setInt(2, orderId);
+                    psDishOrder.setInt(3, dishOrder.getDish().getId());
+                    psDishOrder.setInt(4, dishOrder.getQuantity());
+                    psDishOrder.addBatch();
+                }
+                psDishOrder.executeBatch();
+            }
+
+            conn.commit();
+            return orderToSave;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 }
