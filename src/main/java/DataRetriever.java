@@ -416,8 +416,9 @@ public class DataRetriever {
     }
 
     private void updateSequenceNextValue(Connection conn, String tableName, String columnName, String sequenceName) throws SQLException {
+        // Correction : On utilise 1 au lieu de 0 pour éviter l'erreur "out of bounds"
         String setValSql = String.format(
-                "SELECT setval('%s', (SELECT COALESCE(MAX(%s), 0) FROM %s))",
+                "SELECT setval('%s', (SELECT COALESCE(MAX(%s), 1) FROM %s))",
                 sequenceName, columnName, tableName
         );
 
@@ -468,8 +469,7 @@ public class DataRetriever {
             RETURNING id
         """;
 
-            Integer orderId = (orderToSave.getId() != null) ? orderToSave.getId() : getNextSerialValue(conn, "order", "id");
-
+            Integer orderId = (orderToSave.getId() != null) ? orderToSave.getId() : getNextSerialValue(conn, "\"order\"", "id");
             try (PreparedStatement psOrder = conn.prepareStatement(upsertOrderSql)) {
                 psOrder.setInt(1, orderId);
                 psOrder.setString(2, orderToSave.getReference());
@@ -494,9 +494,7 @@ public class DataRetriever {
             String insertDishOrderSql = "INSERT INTO dish_order (id, id_order, id_dish, quantity) VALUES (?, ?, ?, ?)";
             try (PreparedStatement psDishOrder = conn.prepareStatement(insertDishOrderSql)) {
                 for (DishOrder dishOrder : orderToSave.getDishOrderList()) {
-                    psDishOrder.setInt(1, getNextSerialValue(conn, "dish_order", "id"));
-                    psDishOrder.setInt(2, orderId);
-                    psDishOrder.setInt(3, dishOrder.getDish().getId());
+                    psDishOrder.setInt(1, getNextSerialValue(conn, "\"dish_order\"", "id"));                    psDishOrder.setInt(3, dishOrder.getDish().getId());
                     psDishOrder.setInt(4, dishOrder.getQuantity());
                     psDishOrder.addBatch();
                 }
